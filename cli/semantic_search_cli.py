@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.semantic_search import embed_query_text, embed_text, search_command, verify_embeddings, verify_model
+from lib.semantic_search import chunk_command, embed_query_text, embed_text, search_command, semantic_chunk_command, semantic_chunk_command, verify_embeddings, verify_model
 
 def main():
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
@@ -20,6 +20,16 @@ def main():
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument("--limit", type=int, default=5, help="Limit the number of results")
     
+    chunk_parser = subparsers.add_parser("chunk", help="Chunk text into smaller pieces")
+    chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    chunk_parser.add_argument("--overlap", type=int, help="Size of each chunk overlap") 
+    chunk_parser.add_argument("--chunk-size", type=int, default=200, help="Size of each chunk")
+
+    semantic_chunk_parser = subparsers.add_parser("semantic_chunk", help="Chunk text semantically")
+    semantic_chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4, help="Size of each chunk")
+    semantic_chunk_parser.add_argument("--overlap", type=int, default=0, help="Size of each chunk overlap")
+
     subparsers.add_parser("verify_embeddings", help="Verify embeddings generation")
 
     args = parser.parse_args()
@@ -39,10 +49,13 @@ def main():
             embed_query_text(args.query)
         case "search":
             print(f"Searching for: {args.query} (limit: {args.limit})")
-            results = search_command(args.query, args.limit)
-            for i, res in enumerate(results, 1):
-                print(f"{i}. {res['title']} (score: {res['score']:.4f})")
-                print(f"   {res['description']}")
+            search_command(args.query, args.limit)
+        case "chunk":
+            print(f"Chunking {len(args.text)} characters")
+            chunk_command(args.text, args.chunk_size, args.overlap)
+        case "semantic_chunk":
+            print(f"Semantically chunking {len(args.text)} characters")
+            semantic_chunk_command(args.text, args.max_chunk_size, args.overlap)
         case _:
             parser.print_help()
 

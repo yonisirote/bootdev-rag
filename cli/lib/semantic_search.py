@@ -1,5 +1,6 @@
 import os
 from os import path
+import re
 import numpy as np
 
 from sentence_transformers import SentenceTransformer
@@ -96,4 +97,26 @@ def search_command(query, limit=DEFAULT_SEARCH_LIMIT):
     documents = load_movies()
     semantic_search.load_or_create_embeddings(documents)
     results = semantic_search.search(query, limit)
-    return results
+    for i, res in enumerate(results, 1):
+        print(f"{i}. {res['title']} (score: {res['score']:.4f})")
+        print(f"   {res['description']}")
+    
+def chunk_command(text: str, chunk_size, overlap=0):
+    words = text.split()
+    chunks = [] 
+    for i in range(0, len(words), chunk_size - overlap):
+        chunk = ' '.join(words[i:i + chunk_size])
+        chunks.append(chunk)
+    for i, chunk in enumerate(chunks, 1):
+        print(f"{i}. {chunk}")
+        
+def semantic_chunk_command(text: str, max_chunk_size, overlap=0):
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    chunks = []
+    for i in range(0, len(sentences), max_chunk_size - overlap):
+        chunk = ' '.join(sentences[i:i + max_chunk_size])
+        chunks.append(chunk)
+    for i, chunk in enumerate(chunks, 1):
+        print(f"{i}. {chunk}")
+    
+    
