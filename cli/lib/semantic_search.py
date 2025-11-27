@@ -4,7 +4,7 @@ import numpy as np
 
 from sentence_transformers import SentenceTransformer
 
-from lib.search_utils import CACHE_DIR, load_movies
+from lib.search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, load_movies
 
 
 class SemanticSearch:
@@ -39,7 +39,20 @@ class SemanticSearch:
             if len(self.embeddings) == len(documents):
                 return self.embeddings
         return self.build_embeddings(documents)
-            
+    
+    def search(self, query, limit):
+        if self.embeddings is None or self.embeddings.size == 0:
+            raise ValueError("No embeddings loaded. Call `load_or_create_embeddings` first.")
+        if self.documents is None or len(self.documents) == 0:
+            raise ValueError("No documents loaded. Call `load_or_create_embeddings` first.")
+        embedded_query = self.generate_embedding(query)
+        res = []
+        for doc, emb in zip(self.documents, self.embeddings):
+            similarity_score = cosine_similarity(embedded_query, emb)
+            res.append((similarity_score, doc))
+        res.sort(key=lambda x: x[0], reverse=True)
+        return [{"score": score, "title": doc["title"], "description": doc["description"]} for score, doc in res[:limit]]
+    
         
 
 def verify_model():
@@ -56,7 +69,6 @@ def embed_text(text: str):
     print(f"First 3 dimensions: {embedding[:3]}")
     print(f"Dimensions: {embedding.shape[0]}")
     
-    
 def verify_embeddings():
     semantic_search = SemanticSearch()
     documents = load_movies()
@@ -70,3 +82,18 @@ def embed_query_text(query):
     print(f"Query: {query}")
     print(f"First 5 dimensions: {embedding[:5]}")   
     print(f"Shape: {embedding.shape}")
+    
+def cosine_similarity(vec1, vec2):
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return dot_product / (norm1 * norm2)
+
+def search_command(query, limit=DEFAULT_SEARCH_LIMIT):
+    semantic_search = SemanticSearch()
+    documents = load_movies()
+    semantic_search.load_or_create_embeddings(documents)
+    results = semantic_search.search(query, limit)
+    return results
