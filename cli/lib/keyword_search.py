@@ -6,9 +6,8 @@ from collections import Counter, defaultdict
 
 from nltk.stem import PorterStemmer
 
-from .search_utils import DEFAULT_SEARCH_LIMIT, load_movies, load_stopwords
+from .search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, load_movies, load_stopwords
 
-CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "cache")
 BM25_K1 = 1.5
 BM25_B = 0.75
 
