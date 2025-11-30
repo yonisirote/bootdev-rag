@@ -113,13 +113,17 @@ def chunk_command(text: str, chunk_size, overlap=0):
         
 def semantic_chunk(text: str, max_chunk_size, overlap=0):
     sentences = re.split(r"(?<=[.!?])\s+", text)
+    if len(sentences) == 1 and not text.endswith((".", "!", "?")):
+        sentences = [text]
     chunks = []
     for i in range(0, len(sentences), max_chunk_size - overlap):
         chunk_sentences = sentences[i:i + max_chunk_size]
         if chunks and len(chunk_sentences) <= overlap:
             break
         chunk = ' '.join(chunk_sentences)
-        chunks.append(chunk)
+        stripped_chunk = chunk.strip()
+        if stripped_chunk:
+            chunks.append(stripped_chunk)
     return chunks
         
 def semantic_chunk_command(text: str, max_chunk_size, overlap=0):
@@ -141,8 +145,8 @@ class ChunkedSemanticSearch(SemanticSearch):
         chunk_data = []
         for i, doc in enumerate(documents):
             self.document_map[doc['id']] = doc
-            text = doc.get("description", " ")
-            if not text.strip():
+            text = doc.get("description", " ").strip()
+            if not text:
                 continue
             chunks = semantic_chunk(text, max_chunk_size=4, overlap=1)
             for j, chunk in enumerate(chunks):
