@@ -1,10 +1,14 @@
 import os
+from typing import Optional
 
+from .rerank import rerank
 from .keyword_search import InvertedIndex
+from .query_enhancement import enhance_query
 from .search_utils import (
     DEFAULT_ALPHA,
     DEFAULT_SEARCH_LIMIT,
     RRF_K,
+    SEARCH_MULTIPLIER,
     format_search_result,
     load_movies,
 )
@@ -54,7 +58,6 @@ def normalize_scores(scores: list[float]) -> list[float]:
     normalized_scores = []
     for s in scores:
         normalized_scores.append((s - min_score) / (max_score - min_score))
-
     return normalized_scores
 
 
@@ -199,19 +202,34 @@ def weighted_search_command(
 def rrf_search_command(
     query: str,
     k: int = RRF_K,
+    enhance: Optional[str] = None,
     limit: int = DEFAULT_SEARCH_LIMIT,
+    rerank_method: Optional[str] = None,
 ) -> dict:
     movies = load_movies()
     searcher = HybridSearch(movies)
 
     original_query = query
+    enhanced_query = None
+    if enhance:
+        enhanced_query = enhance_query(query, method=enhance)
+        query = enhanced_query
 
-    search_limit = limit
+    search_limit = limit * SEARCH_MULTIPLIER if rerank_method else limit
     results = searcher.rrf_search(query, k, search_limit)
+
+    reranked = False
+    if rerank_method:
+        reranked = True
+        results = rerank(query, results, rerank_method)[:limit]
 
     return {
         "original_query": original_query,
+        "enhanced_query": enhanced_query,
+        "enhance_method": enhance,
         "query": query,
         "k": k,
+        "reranked": reranked,
+        "rerank_method": rerank_method,
         "results": results,
     }
