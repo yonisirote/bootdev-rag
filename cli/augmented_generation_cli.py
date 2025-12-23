@@ -28,6 +28,14 @@ def main():
         "--limit", type=int, default=5, help="Number of results to return (default=5)"
     )
 
+    question_parser = subparsers.add_parser(
+        "question", help="Answer a question using RAG"
+    )
+    question_parser.add_argument("question", type=str, help="Question for RAG")
+    question_parser.add_argument(
+        "--limit", type=int, default=5, help="Number of results to return (default=5)"
+    )
+
     args = parser.parse_args()
 
     match args.command:
@@ -66,6 +74,18 @@ def main():
                     print(f"    - {res['title']}")
                 print("\n")
                 print("LLM Answer:")
+                print(result["response"].text or "No response generated.")
+        case "question":
+            question = args.question
+            result = rag(question, args.command, args.limit)
+            if result is None:
+                print("Error: No results returned from RAG.")
+            else:
+                print("Search Results:")
+                for res in result["docs"]:
+                    print(f"    - {res['title']}")
+                print("\n")
+                print("Answer:")
                 print(result["response"].text or "No response generated.")
         case _:
             parser.print_help()

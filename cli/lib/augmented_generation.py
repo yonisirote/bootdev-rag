@@ -82,6 +82,31 @@ def citations_command(query, limit):
     return {"docs": results, "response": response}
 
 
+def question_command(query, limit):
+    results = get_results(query, limit)
+
+    prompt = f"""Answer the user's question based on the provided movies that are available on Hoopla.
+
+    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+    Question: {query}
+
+    Documents:
+    {results}
+
+    Instructions:
+    - Answer questions directly and concisely
+    - Be casual and conversational
+    - Don't be cringe or hype-y
+    - Talk like a normal person would in a chat conversation
+
+    Answer:"""
+
+    response = client.models.generate_content(model=model, contents=prompt)
+
+    return {"docs": results, "response": response}
+
+
 def rag(query, command, limit=5):
     match command:
         case "rag":
@@ -90,3 +115,5 @@ def rag(query, command, limit=5):
             return sumarize_command(query, limit)
         case "citations":
             return citations_command(query, limit)
+        case "question":
+            return question_command(query, limit)
