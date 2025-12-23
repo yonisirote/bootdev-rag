@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import os
 from typing import Optional
 
-from .rerank import rerank
 from .keyword_search import InvertedIndex
 from .query_enhancement import enhance_query
+from .rerank import rerank
 from .search_utils import (
     DEFAULT_ALPHA,
     DEFAULT_SEARCH_LIMIT,
