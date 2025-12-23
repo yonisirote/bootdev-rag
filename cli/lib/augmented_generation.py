@@ -54,9 +54,39 @@ def sumarize_command(query, limit=5):
     return {"docs": results, "response": response}
 
 
+def citations_command(query, limit):
+    results = get_results(query, limit)
+
+    prompt = f"""Answer the question or provide information based on the provided documents.
+
+    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+    If not enough information is available to give a good answer, say so but give as good of an answer as you can while citing the sources you have.
+
+    Query: {query}
+
+    Documents:
+    {results}
+
+    Instructions:
+    - Provide a comprehensive answer that addresses the query
+    - Cite sources using [1], [2], etc. format when referencing information
+    - If sources disagree, mention the different viewpoints
+    - If the answer isn't in the documents, say "I don't have enough information"
+    - Be direct and informative
+
+    Answer:"""
+
+    response = client.models.generate_content(model=model, contents=prompt)
+
+    return {"docs": results, "response": response}
+
+
 def rag(query, command, limit=5):
     match command:
         case "rag":
             return rag_command(query, limit)
         case "summarize":
             return sumarize_command(query, limit)
+        case "citations":
+            return citations_command(query, limit)

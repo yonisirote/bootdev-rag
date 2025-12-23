@@ -20,27 +20,53 @@ def main():
         "--limit", type=int, default=5, help="Number of results to return (default=5)"
     )
 
+    citations_parser = subparsers.add_parser(
+        "citations", help="Generate answer with citations using RAG"
+    )
+    citations_parser.add_argument("query", type=str, help="Search query for RAG")
+    citations_parser.add_argument(
+        "--limit", type=int, default=5, help="Number of results to return (default=5)"
+    )
+
     args = parser.parse_args()
 
     match args.command:
         case "rag":
             query = args.query
             result = rag(query, args.command, args.limit)
-            print("Search Results:")
-            for res in result["docs"]:
-                print(f"    - {res['title']}")
-            print("\n")
-            print("RAG RESPONSE:")
-            print(result["response"].text or "No response generated.")
+            if result is None:
+                print("Error: No results returned from RAG.")
+            else:
+                print("Search Results:")
+                for res in result["docs"]:
+                    print(f"    - {res['title']}")
+                print("\n")
+                print("RAG RESPONSE:")
+                print(result["response"].text or "No response generated.")
         case "summarize":
             query = args.query
             result = rag(query, args.command, args.limit)
-            print("Search Results:")
-            for res in result["docs"]:
-                print(f"    - {res['title']}")
-            print("\n")
-            print("LLM Summary:")
-            print(result["response"].text or "No response generated.")
+            if result is None:
+                print("Error: No results returned from RAG.")
+            else:
+                print("Search Results:")
+                for res in result["docs"]:
+                    print(f"    - {res['title']}")
+                print("\n")
+                print("LLM Summary:")
+                print(result["response"].text or "No response generated.")
+        case "citations":
+            query = args.query
+            result = rag(query, args.command, args.limit)
+            if result is None:
+                print("Error: No results returned from RAG.")
+            else:
+                print("Search Results:")
+                for res in result["docs"]:
+                    print(f"    - {res['title']}")
+                print("\n")
+                print("LLM Answer:")
+                print(result["response"].text or "No response generated.")
         case _:
             parser.print_help()
 
